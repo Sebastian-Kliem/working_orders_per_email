@@ -1,0 +1,5 @@
+/.env
+/.venv
+/app/Downloads
+/app/Logs
+/.idea
