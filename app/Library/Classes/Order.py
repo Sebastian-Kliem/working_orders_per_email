@@ -8,6 +8,71 @@ from re import Match
 from app.Library.Config.Config import Config
 
 
+def _send_mail(sender_eMail: str,
+               receiver_email: str,
+               subject: str,
+               html_body: str,
+               mail_client: smtplib.SMTP
+               ):
+    """
+    Send the mail.
+    :param sender_eMail:
+    :param receiver_email:
+    :param subject:
+    :param html_body:
+    :param mail_client:
+    :return:
+    """
+    mail_CC = Config.MAIL_CC
+
+    msg = MIMEMultipart()
+
+    # set the sending time
+    current_time = email.utils.formatdate(localtime=True)
+    msg["Date"] = current_time
+
+    msg["From"] = sender_eMail
+    msg["Cc"] = mail_CC
+    msg["To"] = receiver_email
+    msg["Subject"] = subject
+
+    print(html_body)
+
+    body = MIMEText(html_body, "html")
+    msg.attach(body)
+
+    # try:
+    #     mail_client.sendmail(from_addr=sender_eMail,
+    #                          to_addrs=[receiver_email, mail_CC],
+    #                          msg=msg.as_string())
+    #
+    #     with open(Config.WORKED_ORDERS_FILE_PATH, 'a') as datei:
+    #         datei.write(self.ordernumber + "\n")
+    #     logging.info(f"Bestellnummer {self.ordernumber} -- email sendet.")
+    # except smtplib.SMTPException as e:
+    #     logging.error(f"{self.ordernumber} -- email not sendet: \n{e}")
+
+
+def _check_own_stock(in_stock: dict,
+                     position: dict
+                     ) -> bool:
+    """
+    Checks if a given position in own Stock.
+    :param in_stock: Dict with articles where in stock.
+    :param position: dict of position
+    :return:
+    """
+    if "_" in position['article_number']:
+        article_number = position['article_number'].split("_")[1]
+    else:
+        article_number = position['article_number']
+
+    if article_number in in_stock:
+        if int(in_stock[article_number]) >= int(position['amount']):
+            return True
+    return False
+
+
 class order_class:
 
     def __init__(self,
@@ -98,7 +163,7 @@ class order_class:
         # if just 1 position to deliver
         elif len(self.positions) == 1:
             #  if is order deliverable from own stock
-            if self._check_own_stock(in_stock, self.positions[0]):
+            if _check_own_stock(in_stock, self.positions[0]):
                 html_body = self._create_html_body_manually_working_required(handling="from_own_stock")
                 receiver_email = Config.MAIL_FOR_MANUAL_HANDLING
                 subject = "Bestellung aus Lager versenden"
@@ -131,12 +196,11 @@ class order_class:
                 receiver_email = Config.MAIL_FOR_MANUAL_HANDLING
                 subject = "Bestellung manuell ausführen"
 
-        self._send_mail(sender_eMail=sender_eMail,
-                        receiver_email=receiver_email,
-                        subject=subject,
-                        html_body=html_body,
-                        mail_client=mail_client)
-
+        _send_mail(sender_eMail=sender_eMail,
+                   receiver_email=receiver_email,
+                   subject=subject,
+                   html_body=html_body,
+                   mail_client=mail_client)
 
     def send_mail_for_manually_check(self,
                                      mail_client: smtplib.SMTP,
@@ -154,63 +218,17 @@ class order_class:
         if self.already_worked:
             return
 
-        self._check_own_stock(in_stock, self.positions[0])
+        _check_own_stock(in_stock, self.positions[0])
 
         html_body = self._create_html_body_for_manually_check()
         receiver_email = Config.MAIL_FOR_MANUAL_HANDLING
         subject = "Bestellung manuell prüfen, doppelte Namen"
 
-        self._send_mail(sender_eMail=sender_eMail,
-                        receiver_email=receiver_email,
-                        subject=subject,
-                        html_body=html_body,
-                        mail_client=mail_client)
-
-
-    def _send_mail(self,
-                   sender_eMail: str,
-                   receiver_email: str,
-                   subject: str,
-                   html_body: str,
-                   mail_client: smtplib.SMTP
-                   ):
-        """
-        Send the mail.
-        :param sender_eMail:
-        :param receiver_email:
-        :param subject:
-        :param html_body:
-        :param mail_client:
-        :return:
-        """
-        mail_CC = Config.MAIL_CC
-
-        msg = MIMEMultipart()
-
-        # set the sending time
-        current_time = email.utils.formatdate(localtime=True)
-        msg["Date"] = current_time
-
-        msg["From"] = sender_eMail
-        msg["Cc"] = mail_CC
-        msg["To"] = receiver_email
-        msg["Subject"] = subject
-
-        print(html_body)
-
-        body = MIMEText(html_body, "html")
-        msg.attach(body)
-
-        # try:
-        #     mail_client.sendmail(from_addr=sender_eMail,
-        #                          to_addrs=[receiver_email, mail_CC],
-        #                          msg=msg.as_string())
-        #
-        #     with open(Config.WORKED_ORDERS_FILE_PATH, 'a') as datei:
-        #         datei.write(self.ordernumber + "\n")
-        #     logging.info(f"Bestellnummer {self.ordernumber} -- email sendet.")
-        # except smtplib.SMTPException as e:
-        #     logging.error(f"{self.ordernumber} -- email not sendet: \n{e}")
+        _send_mail(sender_eMail=sender_eMail,
+                   receiver_email=receiver_email,
+                   subject=subject,
+                   html_body=html_body,
+                   mail_client=mail_client)
 
     def _check_suppliers_for_more_than_one_order_position(self) -> bool:
         """
@@ -222,26 +240,6 @@ class order_class:
             if not position["article_number"].split("_")[0] == first_position_supplier:
                 return False
         return True
-
-    def _check_own_stock(self,
-                         in_stock: dict,
-                         position: dict
-                         ) -> bool:
-        """
-        Checks if a given position in own Stock.
-        :param in_stock: Dict with articles where in stock.
-        :param position: dict of position
-        :return:
-        """
-        if "_" in position['article_number']:
-            article_number = position['article_number'].split("_")[1]
-        else:
-            article_number = position['article_number']
-
-        if article_number in in_stock:
-            if int(in_stock[article_number]) >= int(position['amount']):
-                return True
-        return False
 
     def _check_if_supplier_kwon_old_system(self) -> bool:
         """
