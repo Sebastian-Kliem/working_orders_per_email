@@ -1,11 +1,12 @@
 import logging
 import os
 import smtplib
-from Library.Functions import Files
-from Library.Classes.Order import order_class
 from typing import List
-from Library.Config.Config import Config
-from Library.Config import Logging
+
+from app.Library.Functions import Files
+from app.Library.Classes.Order import order_class
+from app.Library.Config.Config import Config
+from app.Library.Config import Logging
 
 Config.setup(
     root_path=os.path.dirname(os.path.abspath(__file__))
@@ -34,7 +35,9 @@ in_stock = {**in_stock_main, **in_stock_belts}
 
 # ########################################################################################################################
 # read file Bestellungen.csv and create order_objects
-orders: List[order_class] = Files.read_orders(Config.ORDERS_FILE_PATH)
+orders_to_send: List[order_class]
+orders_for_manually_check: List[order_class]
+orders_to_send, orders_for_manually_check = Files.read_orders(Config.ORDERS_FILE_PATH)
 
 # ########################################################################################################################
 # open the connection to mail-server
@@ -51,7 +54,7 @@ eMail_server.login(sender_email, sender_password)
 # read the already finished orders
 worked_orders = Files.read_already_worked_orders(Config.WORKED_ORDERS_FILE_PATH)
 
-for order in orders:
+for order in orders_to_send:
     order.check_already_worked(worked_orders)
     if order.already_worked:
         continue
@@ -61,4 +64,12 @@ for order in orders:
                           in_stock=in_stock,
                           )
 
+for order in orders_for_manually_check:
+    order.check_already_worked(worked_orders)
+    if order.already_worked:
+        continue
 
+    order.send_mail_for_manually_check(mail_client=eMail_server,
+                                       sender_eMail=sender_email,
+                                       in_stock=in_stock,
+                                       )

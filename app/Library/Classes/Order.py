@@ -4,7 +4,7 @@ from email.mime.multipart import MIMEMultipart
 import email.utils
 from email.mime.text import MIMEText
 from re import Match
-from Library.Config.Config import Config
+from app.Library.Config.Config import Config
 
 
 class order_class:
@@ -159,6 +159,51 @@ class order_class:
         # except smtplib.SMTPException as e:
         #     logging.error(f"{self.ordernumber} -- email not sendet: \n{e}")
 
+    def send_mail_for_manually_check(self,
+                                     mail_client: smtplib.SMTP,
+                                     sender_eMail: str,
+                                     in_stock: dict,
+                                     ) -> None:
+        """
+        Sends mail with details for manually checking orders, because the customer have done two or more orders.
+        :param in_stock: Dict with the articles in own stock.
+        :param sender_eMail: email address where log in.
+        :param mail_client: smtp-client
+        :return:
+        """
+
+        if self.already_worked:
+            return
+
+        html_body = self._create_html_body_for_manually_check()
+        receiver_email = Config.MAIL_FOR_MANUAL_HANDLING
+        subject = "Bestellung manuell prüfen, doppelte Namen"
+        mail_CC = Config.MAIL_CC
+
+        msg = MIMEMultipart()
+
+        # set the sending time
+        current_time = email.utils.formatdate(localtime=True)
+        msg["Date"] = current_time
+
+        msg["From"] = sender_eMail
+        msg["Cc"] = mail_CC
+        msg["To"] = receiver_email
+        msg["Subject"] = subject
+        print(html_body)
+        body = MIMEText(html_body, "html")
+        msg.attach(body)
+
+        # try:
+        #     mail_client.sendmail(from_addr=sender_eMail,
+        #                          to_addrs=[receiver_email, mail_CC],
+        #                          msg=msg.as_string())
+        #
+        #     with open(Config.WORKED_ORDERS_FILE_PATH, 'a') as datei:
+        #         datei.write(self.ordernumber + "\n")
+        #     logging.info(f"Bestellnummer {self.ordernumber} -- email sendet.")
+        # except smtplib.SMTPException as e:
+        #     logging.error(f"{self.ordernumber} -- email not sendet: \n{e}")
 
     def _check_suppliers_for_more_than_one_order_position(self) -> bool:
         """
@@ -170,7 +215,6 @@ class order_class:
             if not position["article_number"].split("_")[0] == first_position_supplier:
                 return False
         return True
-
 
     def _check_own_stock(self,
                          in_stock: dict,
@@ -318,6 +362,39 @@ class order_class:
 
         return body
 
+    def _create_html_body_for_manually_check(self,
+                                             new_article_number_system: bool = False
+                                             ) -> str:
+        """
+        Creates the html_string for manual checking for double names.
+        :return:
+        """
+        if new_article_number_system:
+            articles_html_string = self._get_article_html_string_new_numbersystem()
+        else:
+            articles_html_string = self._get_article_html_string_old_numbersystem()
+
+        body = f"""
+                Die Bestellung muss manuell im System geprüft werden.<br>
+                <br>
+                Der Name ist doppelt vorhanden!<br> 
+                <br> 
+                {articles_html_string} <br>
+                <br>
+                an folgende Adresse: <br>
+                <br> <strong>
+                {self.company}<br>
+                {self.first_name} {self.last_name}<br>
+                {self.street}<br>
+                {self.zip_code} {self.city}<br>
+                <br>
+                Telefon: <br>
+                {self.phone}<br>
+                
+                """
+
+        return body
+
     def _get_article_html_string_old_numbersystem(self) -> str:
         """
         Creates the html_string for each article in positionslist
@@ -381,7 +458,7 @@ class order_class:
         else:
             return Config.MAIL_ADDRESS_KWON
 
-    def _check_articlenumbers_for_special_handling(self,) -> None:
+    def _check_articlenumbers_for_special_handling(self, ) -> None:
         """
         checks the article numbers for special handling (change it)
         :return:

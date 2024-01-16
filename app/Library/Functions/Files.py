@@ -2,8 +2,10 @@ import csv
 import logging
 import os
 from ftplib import FTP
+from typing import Tuple, List
+
 from pyexcel_ods import get_data
-from Library.Classes.Order import order_class
+from app.Library.Classes.Order import order_class
 
 
 def download_files_from_ftp(orders_file: str,
@@ -113,13 +115,15 @@ def get_in_stock_belts(file_name: str,
     exit()
 
 
-def read_orders(file_name: str) -> list:
+def read_orders(file_name: str) -> tuple[list[order_class], list[order_class]]:
     """Files
     Read the orderfile to get a list of oders
     :param file_name:
     :return: List oder-classes.
     """
-    returnlist = []
+    order_names = []
+    orders_to_work = []
+    orders_manually_check = []
     orders = {}
     with open(file_name, newline='', encoding='utf-8-sig') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=';')
@@ -127,12 +131,23 @@ def read_orders(file_name: str) -> list:
             if "Versandposition" in row['Positionstyp']:
                 continue
 
+            name = (row['L_Vorname'], row['L_Nachname'])
+            order_names.append(name)
+            del name
+
             order_number = row["Bestell Nr."]
             if order_number not in orders:
                 orders[order_number] = []
 
 
             orders[order_number].append(row)
+
+    double_orders_names = set()
+    for name in order_names:
+        if order_names.count(name) > 1:
+            double_orders_names.add(name)
+
+
 
     for key, value in orders.items():
 
@@ -157,9 +172,14 @@ def read_orders(file_name: str) -> list:
                             plattform=value[0]['Plattform'],
                             positions=positions
                             )
-        returnlist.append(order)
+
+
+        if (order.first_name, order.last_name) in double_orders_names:
+            orders_manually_check.append(order)
+        else:
+            orders_to_work.append(order)
     logging.debug("File with orders finally read")
-    return returnlist
+    return orders_to_work, orders_manually_check
 
 
 def read_already_worked_orders(filepath: str) -> list:
