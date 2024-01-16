@@ -1,3 +1,4 @@
+import logging
 import smtplib
 import re
 from email.mime.multipart import MIMEMultipart
@@ -114,8 +115,6 @@ class order_class:
                 receiver_email = self._get_receiver_email_old_system(self.positions[0])
                 subject = "Bestellung"
 
-
-
         # if more than one position
         elif len(self.positions) > 1:
             if self._check_suppliers_for_more_than_one_order_position():
@@ -132,21 +131,26 @@ class order_class:
                 receiver_email = Config.MAIL_FOR_MANUAL_HANDLING
                 subject = "Bestellung manuell ausführen"
 
-        mail_CC = Config.MAIL_CC
-
-        msg = MIMEMultipart()
-
-        # set the sending time
-        current_time = email.utils.formatdate(localtime=True)
-        msg["Date"] = current_time
-
-        msg["From"] = sender_eMail
-        msg["Cc"] = mail_CC
-        msg["To"] = receiver_email
-        msg["Subject"] = subject
-
-        body = MIMEText(html_body, "html")
-        msg.attach(body)
+        self._send_mail(sender_eMail=sender_eMail,
+                        receiver_email=receiver_email,
+                        subject=subject,
+                        html_body=html_body,
+                        mail_client=mail_client)
+        # mail_CC = Config.MAIL_CC
+        #
+        # msg = MIMEMultipart()
+        #
+        # # set the sending time
+        # current_time = email.utils.formatdate(localtime=True)
+        # msg["Date"] = current_time
+        #
+        # msg["From"] = sender_eMail
+        # msg["Cc"] = mail_CC
+        # msg["To"] = receiver_email
+        # msg["Subject"] = subject
+        #
+        # body = MIMEText(html_body, "html")
+        # msg.attach(body)
 
         # try:
         #     mail_client.sendmail(from_addr=sender_eMail,
@@ -175,9 +179,51 @@ class order_class:
         if self.already_worked:
             return
 
+        self._check_own_stock(in_stock, self.positions[0])
+
         html_body = self._create_html_body_for_manually_check()
         receiver_email = Config.MAIL_FOR_MANUAL_HANDLING
         subject = "Bestellung manuell prüfen, doppelte Namen"
+
+        self._send_mail(sender_eMail=sender_eMail,
+                        receiver_email=receiver_email,
+                        subject=subject,
+                        html_body=html_body,
+                        mail_client=mail_client)
+        # mail_CC = Config.MAIL_CC
+        #
+        # msg = MIMEMultipart()
+        #
+        # # set the sending time
+        # current_time = email.utils.formatdate(localtime=True)
+        # msg["Date"] = current_time
+        #
+        # msg["From"] = sender_eMail
+        # msg["Cc"] = mail_CC
+        # msg["To"] = receiver_email
+        # msg["Subject"] = subject
+        #
+        # body = MIMEText(html_body, "html")
+        # msg.attach(body)
+
+        # try:
+        #     mail_client.sendmail(from_addr=sender_eMail,
+        #                          to_addrs=[receiver_email, mail_CC],
+        #                          msg=msg.as_string())
+        #
+        #     with open(Config.WORKED_ORDERS_FILE_PATH, 'a') as datei:
+        #         datei.write(self.ordernumber + "\n")
+        #     logging.info(f"Bestellnummer {self.ordernumber} -- email sendet.")
+        # except smtplib.SMTPException as e:
+        #     logging.error(f"{self.ordernumber} -- email not sendet: \n{e}")
+
+    def _send_mail(self,
+                   sender_eMail: str,
+                   receiver_email: str,
+                   subject: str,
+                   html_body: str,
+                   mail_client: smtplib.SMTP
+                   ):
         mail_CC = Config.MAIL_CC
 
         msg = MIMEMultipart()
@@ -190,7 +236,9 @@ class order_class:
         msg["Cc"] = mail_CC
         msg["To"] = receiver_email
         msg["Subject"] = subject
+
         print(html_body)
+
         body = MIMEText(html_body, "html")
         msg.attach(body)
 
@@ -363,6 +411,7 @@ class order_class:
         return body
 
     def _create_html_body_for_manually_check(self,
+                                             is_in_own_stock: bool = False,
                                              new_article_number_system: bool = False
                                              ) -> str:
         """
@@ -374,12 +423,19 @@ class order_class:
         else:
             articles_html_string = self._get_article_html_string_old_numbersystem()
 
+        if is_in_own_stock:
+            own_stock_html_string = "Wir haben den Artikel im Lager"
+        else:
+            own_stock_html_string = "Der Artikel ist nicht bei uns lagernd"
+
         body = f"""
                 Die Bestellung muss manuell im System geprüft werden.<br>
                 <br>
                 Der Name ist doppelt vorhanden!<br> 
                 <br> 
                 {articles_html_string} <br>
+                <br>
+                {own_stock_html_string} <br>
                 <br>
                 an folgende Adresse: <br>
                 <br> <strong>
