@@ -136,32 +136,7 @@ class order_class:
                         subject=subject,
                         html_body=html_body,
                         mail_client=mail_client)
-        # mail_CC = Config.MAIL_CC
-        #
-        # msg = MIMEMultipart()
-        #
-        # # set the sending time
-        # current_time = email.utils.formatdate(localtime=True)
-        # msg["Date"] = current_time
-        #
-        # msg["From"] = sender_eMail
-        # msg["Cc"] = mail_CC
-        # msg["To"] = receiver_email
-        # msg["Subject"] = subject
-        #
-        # body = MIMEText(html_body, "html")
-        # msg.attach(body)
 
-        # try:
-        #     mail_client.sendmail(from_addr=sender_eMail,
-        #                          to_addrs=[receiver_email, mail_CC],
-        #                          msg=msg.as_string())
-        #
-        #     with open(Config.WORKED_ORDERS_FILE_PATH, 'a') as datei:
-        #         datei.write(self.ordernumber + "\n")
-        #     logging.info(f"Bestellnummer {self.ordernumber} -- email sendet.")
-        # except smtplib.SMTPException as e:
-        #     logging.error(f"{self.ordernumber} -- email not sendet: \n{e}")
 
     def send_mail_for_manually_check(self,
                                      mail_client: smtplib.SMTP,
@@ -190,32 +165,7 @@ class order_class:
                         subject=subject,
                         html_body=html_body,
                         mail_client=mail_client)
-        # mail_CC = Config.MAIL_CC
-        #
-        # msg = MIMEMultipart()
-        #
-        # # set the sending time
-        # current_time = email.utils.formatdate(localtime=True)
-        # msg["Date"] = current_time
-        #
-        # msg["From"] = sender_eMail
-        # msg["Cc"] = mail_CC
-        # msg["To"] = receiver_email
-        # msg["Subject"] = subject
-        #
-        # body = MIMEText(html_body, "html")
-        # msg.attach(body)
 
-        # try:
-        #     mail_client.sendmail(from_addr=sender_eMail,
-        #                          to_addrs=[receiver_email, mail_CC],
-        #                          msg=msg.as_string())
-        #
-        #     with open(Config.WORKED_ORDERS_FILE_PATH, 'a') as datei:
-        #         datei.write(self.ordernumber + "\n")
-        #     logging.info(f"Bestellnummer {self.ordernumber} -- email sendet.")
-        # except smtplib.SMTPException as e:
-        #     logging.error(f"{self.ordernumber} -- email not sendet: \n{e}")
 
     def _send_mail(self,
                    sender_eMail: str,
@@ -224,6 +174,15 @@ class order_class:
                    html_body: str,
                    mail_client: smtplib.SMTP
                    ):
+        """
+        Send the mail.
+        :param sender_eMail:
+        :param receiver_email:
+        :param subject:
+        :param html_body:
+        :param mail_client:
+        :return:
+        """
         mail_CC = Config.MAIL_CC
 
         msg = MIMEMultipart()
