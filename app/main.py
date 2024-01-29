@@ -16,12 +16,12 @@ Logging.setup_logging()
 
 logging.info("----------------- Script is startet -----------------")
 
-# Files.download_files_from_ftp(orders_file=Config.ORDERS_FILE_NAME,
-#                               stock_file=Config.STOCK_FILE_NAME,
-#                               destination=Config.DOWNLOAD_DESTINATION,
-#                               server=Config.FTP_SERVER,
-#                               username=Config.FTP_USER,
-#                               password=Config.FTP_PASSWORD)
+Files.download_files_from_ftp(orders_file=Config.ORDERS_FILE_NAME,
+                              stock_file=Config.STOCK_FILE_NAME,
+                              destination=Config.DOWNLOAD_DESTINATION,
+                              server=Config.FTP_SERVER,
+                              username=Config.FTP_USER,
+                              password=Config.FTP_PASSWORD)
 
 in_stock_main = Files.get_own_stock_main(file_name=Config.STOCK_FILE_PATH,
                                          table_name="Tabelle1"

@@ -2,7 +2,7 @@ import csv
 import logging
 import os
 from ftplib import FTP
-from typing import Tuple, List, Dict, Any
+from typing import Tuple, List, Dict, Any, Set
 
 from pyexcel_ods import get_data
 from app.Library.Classes.Order import order_class
@@ -122,16 +122,9 @@ def read_orders(file_name: str) -> tuple[list[order_class], list[order_class]]:
     :return: List oder-classes.
     """
 
+    orders = _get_csv_rows(file_name)
 
-    orders, order_names = _get_csv_rows(file_name)
-
-    double_orders_names = set()
-    for name in order_names:
-        if order_names.count(name) > 1:
-            double_orders_names.add(name)
-
-    orders_to_work = []
-    orders_manually_check = []
+    readed_orders = []
     for key, value in orders.items():
 
         positions = []
@@ -155,10 +148,18 @@ def read_orders(file_name: str) -> tuple[list[order_class], list[order_class]]:
                             positions=positions
                             )
 
+        readed_orders.append(order)
+
+    double_orders_names = _get_double_order_names(readed_orders)
+
+    orders_to_work = []
+    orders_manually_check = []
+    for order in readed_orders:
         if (order.first_name, order.last_name) in double_orders_names:
             orders_manually_check.append(order)
         else:
             orders_to_work.append(order)
+
     logging.debug("File with orders finally read")
     return orders_to_work, orders_manually_check
 
@@ -178,27 +179,41 @@ def read_already_worked_orders(filepath: str) -> list:
     return []
 
 
-def _get_csv_rows(file_name: str) -> tuple[dict[str, list[Any]], list[tuple[str, str]]]:
-    """
+def _get_csv_rows(file_name: str) -> dict[str, list[Any]]:
+    f"""
     Open the orders file, sort all and return the rows where need.
     :param file_name:
-    :return: dict with orders, list of tuples of names
+    :return: dict with orders [order_number:[list of fields from csv]]
     """
     orders = {}
-    order_names = []
     with open(file_name, newline='', encoding='utf-8-sig') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=';')
         for row in reader:
             if "Versandposition" in row['Positionstyp']:
                 continue
 
-            name = (row['L_Vorname'], row['L_Nachname'])
-            order_names.append(name)
-            del name
-
             order_number = row["Bestell Nr."]
             if order_number not in orders:
                 orders[order_number] = []
             orders[order_number].append(row)
 
-    return orders, order_names
+    return orders
+
+
+def _get_double_order_names(orders: list) -> set[tuple[Any, Any]]:
+    """
+    Get the list with orders and check if a name is double
+    :param orders: list with orders
+    :return: tuple with first and lastname names where are double
+    """
+    order_names = []
+    for order in orders:
+        name = (order.first_name, order.last_name)
+        order_names.append(name)
+
+    double_orders_names = set()
+    for name in order_names:
+        if order_names.count(name) > 1:
+            double_orders_names.add(name)
+
+    return double_orders_names
