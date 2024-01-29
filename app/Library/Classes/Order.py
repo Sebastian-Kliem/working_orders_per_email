@@ -429,6 +429,9 @@ class order_class:
         for item in self.positions:
             html_string += self._get_clean_article_name(item['articlename']) + "<br>"
 
+            if "Lageritem" in item['article_number']:
+                item['article_number'] = item['article_number'].replace("Lageritem_", "")
+
             if "_" in item['article_number']:
                 html_string += item['article_number'].split("_")[1] + "<br>"
             else:
