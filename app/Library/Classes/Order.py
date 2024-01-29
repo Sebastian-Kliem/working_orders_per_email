@@ -309,6 +309,7 @@ class order_class:
         {self.company}<br>
         {self.first_name} {self.last_name}<br>
         {self.street}<br>
+        {self.address_addition + '<br>' if self.address_addition else ""}
         {self.zip_code} {self.city}<br>
         <br>
         Telefon: <br>
@@ -352,6 +353,7 @@ class order_class:
                 {self.company}<br>
                 {self.first_name} {self.last_name}<br>
                 {self.street}<br>
+                {self.address_addition + '<br>' if self.address_addition else ""}
                 {self.zip_code} {self.city}<br>
                 <br>
                 Telefon: <br>
@@ -388,6 +390,8 @@ class order_class:
         body = f"""
                 Die Bestellung muss manuell im System geprüft werden.<br>
                 <br>
+                {self.ordernumber}<br>
+                <br>
                 Der Name ist doppelt vorhanden!<br> 
                 <br> 
                 {articles_html_string} <br>
@@ -399,11 +403,15 @@ class order_class:
                 {self.company}<br>
                 {self.first_name} {self.last_name}<br>
                 {self.street}<br>
+                {self.address_addition + '<br>' if self.address_addition else ""}
                 {self.zip_code} {self.city}<br>
                 <br>
                 Telefon: <br>
                 {self.phone}<br>
-                
+                <br>
+                <br>
+                E-Mail zur Sendungsverfolgung: <br>
+                {self.ordernumber}@sk-sporthandel.de <br>      
                 """
 
         return body
