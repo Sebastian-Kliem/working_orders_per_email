@@ -311,6 +311,7 @@ class order_class:
         {self.street}<br>
         {self.address_addition + '<br>' if self.address_addition else ""}
         {self.zip_code} {self.city}<br>
+        {self.country}<br>
         <br>
         Telefon: <br>
         {self.phone}<br>
@@ -355,6 +356,7 @@ class order_class:
                 {self.street}<br>
                 {self.address_addition + '<br>' if self.address_addition else ""}
                 {self.zip_code} {self.city}<br>
+                {self.country}<br>
                 <br>
                 Telefon: <br>
                 {self.phone}<br>
@@ -405,6 +407,7 @@ class order_class:
                 {self.street}<br>
                 {self.address_addition + '<br>' if self.address_addition else ""}
                 {self.zip_code} {self.city}<br>
+                {self.country}<br>
                 <br>
                 Telefon: <br>
                 {self.phone}<br>
