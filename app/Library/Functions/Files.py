@@ -5,7 +5,7 @@ from ftplib import FTP
 from typing import Tuple, List, Dict, Any, Set
 
 from pyexcel_ods import get_data
-from app.Library.Classes.Order import order_class
+from ..Classes.Order import order_class
 
 
 def download_files_from_ftp(orders_file: str,

@@ -3,10 +3,10 @@ import os
 import smtplib
 from typing import List
 
-from app.Library.Functions import Files
-from app.Library.Classes.Order import order_class
-from app.Library.Config.Config import Config
-from app.Library.Config import Logging
+from Library.Functions import Files
+from Library.Classes.Order import order_class
+from Library.Config.Config import Config
+from Library.Config import Logging
 
 Config.setup(
     root_path=os.path.dirname(os.path.abspath(__file__))

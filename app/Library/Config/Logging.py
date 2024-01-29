@@ -1,7 +1,7 @@
 import os
 import logging
 from datetime import datetime
-from app.Library.Config.Config import Config
+from ..Config.Config import Config
 
 
 def setup_logging():

@@ -5,7 +5,7 @@ from email.mime.multipart import MIMEMultipart
 import email.utils
 from email.mime.text import MIMEText
 from re import Match
-from app.Library.Config.Config import Config
+from ..Config.Config import Config
 
 
 class order_class:
@@ -131,11 +131,11 @@ class order_class:
                 receiver_email = Config.MAIL_FOR_MANUAL_HANDLING
                 subject = "Bestellung manuell ausführen"
 
-        self._send_mail(sender_eMail=sender_eMail,
-                        receiver_email=receiver_email,
-                        subject=subject,
-                        html_body=html_body,
-                        mail_client=mail_client)
+        # self._send_mail(sender_eMail=sender_eMail,
+        #                 receiver_email=receiver_email,
+        #                 subject=subject,
+        #                 html_body=html_body,
+        #                 mail_client=mail_client)
 
 
     def send_mail_for_manually_check(self,
