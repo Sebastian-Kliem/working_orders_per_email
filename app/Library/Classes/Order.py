@@ -131,11 +131,11 @@ class order_class:
                 receiver_email = Config.MAIL_FOR_MANUAL_HANDLING
                 subject = "Bestellung manuell ausführen"
 
-        # self._send_mail(sender_eMail=sender_eMail,
-        #                 receiver_email=receiver_email,
-        #                 subject=subject,
-        #                 html_body=html_body,
-        #                 mail_client=mail_client)
+        self._send_mail(sender_eMail=sender_eMail,
+                        receiver_email=receiver_email,
+                        subject=subject,
+                        html_body=html_body,
+                        mail_client=mail_client)
 
 
     def send_mail_for_manually_check(self,
@@ -231,6 +231,9 @@ class order_class:
         :param position: dict of position
         :return:
         """
+        if "Lageritem" in position['article_number']:
+            position['article_number'] = position['article_number'].replace("Lageritem_", "")
+
         if "_" in position['article_number']:
             article_number = position['article_number'].split("_")[1]
         else:
